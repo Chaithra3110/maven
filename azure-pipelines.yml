@@ -1,0 +1,37 @@
+trigger:
+- master  # Define the branch to trigger the pipeline
+
+pool:
+  vmImage: 'ubuntu-latest'  # Specify the build agent image
+
+variables:
+  # Define your environment-specific variables here
+  nodejs_version: '14.x'
+  
+stages:
+- stage: Build
+  jobs:
+  - job: Build
+    steps:
+    - task: UseNode@1
+      inputs:
+        versionSpec: '$(nodejs_version)'
+        checkLatest: true
+      displayName: 'Install Node.js'
+    
+    - script: npm install
+      displayName: 'Install dependencies'
+    
+    - script: npm run build
+      displayName: 'Build the application'
+
+- stage: Deploy
+  jobs:
+  - job: Deploy
+    steps:
+    - script: |
+        # Add your deployment commands here
+        # Example: Deploy to Azure App Service
+        az webapp deployment source config --name YourAppServiceName --resource-group YourResourceGroup --repository-type tfsgit --branch master --repo https://$(System.CollectionUri)/$(Build.Repository.Name)/_git/$(Build.Repository.Name)
+      displayName: 'Deploy the application'
+
